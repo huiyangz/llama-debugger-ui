@@ -10,6 +10,8 @@ interface ToolbarProps {
     onEnable: () => void;
     onPause: () => void;
     onResume: () => void;
+    onNextLayer: () => void;
+    onNextToken: () => void;
     onStep: () => void;
     onRefresh: () => void;
     onClearTokens: () => void;
@@ -24,6 +26,8 @@ export function Toolbar({
     onEnable,
     onPause,
     onResume,
+    onNextLayer,
+    onNextToken,
     onStep,
     onRefresh,
     onClearTokens,
@@ -47,6 +51,13 @@ export function Toolbar({
                             <span className="text-sm text-gray-500 dark:text-gray-400">状态:</span>
                             <span className="text-sm font-semibold">
                                 {state.paused ? '⏸ 已暂停' : '▶ 运行中'}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">位置:</span>
+                            <span className="text-sm font-semibold truncate max-w-[200px]" title={state.currentNode}>
+                                {state.currentLayer !== undefined && state.currentLayer !== -1 ? `L${state.currentLayer + 1}` : '-'}
+                                {state.currentNode ? ` ${state.currentNode}` : ''}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -83,34 +94,50 @@ export function Toolbar({
                         <button
                             onClick={onResume}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="继续"
+                            className="px-2.5 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
+                            title="继续运行直到下一个断点或结束"
                         >
-                            ▶ 继续
+                            🚀 继续
+                        </button>
+                        <button
+                            onClick={onNextLayer}
+                            disabled={!state.enabled || !state.paused || loading}
+                            className="px-2.5 py-1.5 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
+                            title="执行到下一层"
+                        >
+                            🥞 逐层
+                        </button>
+                        <button
+                            onClick={onNextToken}
+                            disabled={!state.enabled || !state.paused || loading}
+                            className="px-2.5 py-1.5 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
+                            title="执行下一个 Token"
+                        >
+                            🔤 逐 Token
                         </button>
                         <button
                             onClick={onStep}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="单步"
+                            className="px-2.5 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
+                            title="执行下一个算子"
                         >
                             ⤵ 单步
                         </button>
                         <button
                             onClick={onRefresh}
                             disabled={loading}
-                            className="px-3 py-1.5 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                            className="px-2.5 py-1.5 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                             title="刷新状态"
                         >
-                            🔄 刷新
+                            🔄
                         </button>
                         <button
                             onClick={onClearTokens}
                             disabled={tokenCount === 0}
-                            className="px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                            className="px-2.5 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                             title="清空 Tokens"
                         >
-                            🗑 清空
+                            🗑
                         </button>
                     </div>
                 </div>

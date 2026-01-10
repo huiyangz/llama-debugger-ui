@@ -54,6 +54,8 @@ export default function Home() {
                 onEnable={controls.enable}
                 onPause={controls.pause}
                 onResume={controls.resume}
+                onNextLayer={controls.nextLayer}
+                onNextToken={controls.nextToken}
                 onStep={controls.step}
                 onRefresh={controls.getState}
                 onClearTokens={controls.clearTokens}
@@ -66,7 +68,10 @@ export default function Home() {
                 <div className="flex-1 relative">
                     <ModelGraph
                         modelInfo={modelInfo}
-                        currentLayer={undefined} // TODO: Connect to actual current layer from debug state
+                        currentLayer={state.currentLayer}
+                        currentNode={state.currentNode}
+                        currentOp={state.currentOp}
+                        currentInputs={state.currentInputs}
                         onLayerClick={handleLayerClick}
                     />
                 </div>
@@ -76,6 +81,9 @@ export default function Home() {
                     selectedLayer={selectedLayer}
                     modelInfo={modelInfo}
                     tokens={tokens}
+                    currentNode={state.currentNode}
+                    currentOp={state.currentOp}
+                    currentInputs={state.currentInputs}
                 />
             </div>
 

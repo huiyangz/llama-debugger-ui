@@ -4,13 +4,17 @@ export interface DebugState {
   enabled: boolean;
   paused: boolean;
   granularity: DebugGranularity;
+  currentLayer?: number;
+  currentNode?: string;
+  currentOp?: string;
+  currentInputs?: string;
 }
 
 export interface TokenInfo {
   id: number;
   text: string;
   position: number;
-  rawContent?: string; // 原始内容
+  rawContent?: string;
 }
 
 export interface DebugResponse {
@@ -18,5 +22,9 @@ export interface DebugResponse {
   error?: string;
   enabled?: boolean;
   paused?: boolean;
-  granularity?: DebugGranularity;
+  granularity?: number | DebugGranularity;
+  current_layer?: number;
+  current_node?: string;
+  current_op?: string;
+  current_inputs?: string;
 }

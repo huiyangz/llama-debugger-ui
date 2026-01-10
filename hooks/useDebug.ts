@@ -24,20 +24,14 @@ export function useDebug() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/debug/pause`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'pause' })
+        });
         const data: DebugResponse = await res.json();
         if (data.error) throw new Error(data.error);
-
-        // 获取最新状态
-        const stateRes = await fetch(`${API_BASE}/debug/state`);
-        const stateData: DebugResponse = await stateRes.json();
-        if (stateData.error) throw new Error(stateData.error);
-
-        setState({
-          enabled: stateData.enabled ?? false,
-          paused: stateData.paused ?? true,
-          granularity: stateData.granularity ?? 'token',
-        });
+        await controls.getState();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Pause failed');
       } finally {
@@ -49,22 +43,54 @@ export function useDebug() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/debug/resume`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'resume' })
+        });
         const data: DebugResponse = await res.json();
         if (data.error) throw new Error(data.error);
-
-        // 获取最新状态
-        const stateRes = await fetch(`${API_BASE}/debug/state`);
-        const stateData: DebugResponse = await stateRes.json();
-        if (stateData.error) throw new Error(stateData.error);
-
-        setState({
-          enabled: stateData.enabled ?? false,
-          paused: stateData.paused ?? false,
-          granularity: stateData.granularity ?? 'token',
-        });
+        await controls.getState();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Resume failed');
+      } finally {
+        setLoading(false);
+      }
+    }, []),
+
+    nextLayer: useCallback(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'next_layer' })
+        });
+        const data: DebugResponse = await res.json();
+        if (data.error) throw new Error(data.error);
+        await controls.getState();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Next layer failed');
+      } finally {
+        setLoading(false);
+      }
+    }, []),
+
+    nextToken: useCallback(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'next_token' })
+        });
+        const data: DebugResponse = await res.json();
+        if (data.error) throw new Error(data.error);
+        await controls.getState();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Next token failed');
       } finally {
         setLoading(false);
       }
@@ -74,10 +100,14 @@ export function useDebug() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/debug/step`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'step' })
+        });
         const data: DebugResponse = await res.json();
         if (data.error) throw new Error(data.error);
-        // 注意：不再添加模拟 token，因为流式输出会添加真实 token
+        await controls.getState();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Step failed');
       } finally {
@@ -89,20 +119,14 @@ export function useDebug() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/debug/enable`, { method: 'POST' });
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'enable', granularity: 1 }) // Token granularity by default
+        });
         const data: DebugResponse = await res.json();
         if (data.error) throw new Error(data.error);
-
-        // 启用后自动获取最新状态（因为后端会自动暂停）
-        const stateRes = await fetch(`${API_BASE}/debug/state`);
-        const stateData: DebugResponse = await stateRes.json();
-        if (stateData.error) throw new Error(stateData.error);
-
-        setState({
-          enabled: stateData.enabled ?? true,
-          paused: stateData.paused ?? true,
-          granularity: stateData.granularity ?? 'token',
-        });
+        await controls.getState();
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Enable failed');
       } finally {
@@ -114,13 +138,25 @@ export function useDebug() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/debug/state`);
+        const res = await fetch(`${API_BASE}/api/debug/state`);
         const data: DebugResponse = await res.json();
         if (data.error) throw new Error(data.error);
+
+        const gMap: Record<number, string> = {
+          1: 'token',
+          2: 'layer',
+          4: 'operation',
+          7: 'operation' // step sets multiple bits
+        };
+
         setState({
           enabled: data.enabled ?? false,
           paused: data.paused ?? false,
-          granularity: data.granularity ?? 'token',
+          granularity: (typeof data.granularity === 'number' ? gMap[data.granularity] : data.granularity) as any || 'token',
+          currentLayer: data.current_layer,
+          currentNode: data.current_node,
+          currentOp: data.current_op,
+          currentInputs: data.current_inputs,
         });
         return data;
       } catch (e) {
@@ -209,9 +245,9 @@ export function useDebug() {
                 // 使用 ref 追踪，避免 React StrictMode 双重调用
                 tokenCount++;
                 const displayText = content === '' ? `<empty>` :
-                                 content === ' ' ? `<space>` :
-                                 content.length === 1 && content.charCodeAt(0) < 32 ? `<ctrl ${content.charCodeAt(0)}>` :
-                                 content;
+                  content === ' ' ? `<space>` :
+                    content.length === 1 && content.charCodeAt(0) < 32 ? `<ctrl ${content.charCodeAt(0)}>` :
+                      content;
 
                 console.log('[DEBUG] Token', tokenCount, ':', displayText, `(raw: "${content}")`);
                 console.log('[DEBUG] tokensRef.current.length before:', tokensRef.current.length);

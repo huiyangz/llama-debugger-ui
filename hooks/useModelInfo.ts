@@ -47,7 +47,8 @@ export function useModelInfo() {
                             ffn_dim: ffn_dim
                         }
                     };
-                })
+                }),
+                layer_schema: data.layer_schema || []
             };
 
             setModelInfo(modelInfo);

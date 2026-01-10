@@ -7,9 +7,12 @@ interface DetailPanelProps {
     selectedLayer: LayerInfo | null;
     modelInfo: ModelInfo | null;
     tokens: TokenInfo[];
+    currentNode?: string;
+    currentOp?: string;
+    currentInputs?: string;
 }
 
-export function DetailPanel({ selectedLayer, modelInfo, tokens }: DetailPanelProps) {
+export function DetailPanel({ selectedLayer, modelInfo, tokens, currentNode, currentOp, currentInputs }: DetailPanelProps) {
     const formatBytes = (bytes: number) => {
         if (bytes < 1024) return `${bytes} B`;
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
@@ -25,6 +28,46 @@ export function DetailPanel({ selectedLayer, modelInfo, tokens }: DetailPanelPro
         <div className="w-80 border-l bg-white dark:bg-gray-800 overflow-y-auto">
             <div className="p-4">
                 <h2 className="text-lg font-bold mb-4">详细信息</h2>
+
+                {/* Current Operation Section */}
+                {currentNode && (
+                    <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-500 dark:border-blue-600">
+                        <h3 className="text-xs font-bold mb-2 text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                            当前执行操作
+                        </h3>
+                        <div className="space-y-2 text-xs">
+                            <div className="flex items-start">
+                                <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[50px]">节点:</span>
+                                <div className="flex-1">
+                                    <span className="text-gray-900 dark:text-white font-mono font-bold">{currentNode}</span>
+                                    {(currentNode.startsWith('node_') || currentNode.startsWith('tensor_')) && (
+                                        <div className="mt-1 text-[10px] text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded">
+                                            ⚠️ 临时匿名节点（名称可能每次运行不同）
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {currentOp && (
+                                <div className="flex items-start">
+                                    <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[50px]">操作:</span>
+                                    <span className="text-purple-600 dark:text-purple-400 font-mono font-bold">{currentOp}</span>
+                                </div>
+                            )}
+                            {currentInputs && (
+                                <div className="flex flex-col">
+                                    <span className="font-semibold text-gray-600 dark:text-gray-400 mb-1">输入:</span>
+                                    <span className="text-gray-900 dark:text-white font-mono text-[10px] bg-gray-100 dark:bg-gray-700 p-2 rounded break-all">
+                                        {currentInputs}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex items-start">
+                                <span className="font-semibold text-gray-600 dark:text-gray-400 min-w-[50px]">输出:</span>
+                                <span className="text-green-600 dark:text-green-400 font-mono font-bold">{currentNode}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Architecture Insights */}
                 {modelInfo?.metadata && (
@@ -85,7 +128,7 @@ export function DetailPanel({ selectedLayer, modelInfo, tokens }: DetailPanelPro
                     <div className="mb-6">
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                第 {selectedLayer.index} 层详情
+                                第 {selectedLayer.index + 1} 层详情
                             </h3>
                             <button
                                 onClick={() => {/* TODO: Set breakpoint */ }}

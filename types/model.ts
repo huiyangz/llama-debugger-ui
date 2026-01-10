@@ -21,6 +21,12 @@ export interface LayerInfo {
     tensors: TensorInfo[];
 }
 
+export interface SchemaNode {
+    name: string;
+    op: string;
+    inputs: string[];
+}
+
 export interface ModelInfo {
     model_name: string;
     arch: string;
@@ -37,4 +43,5 @@ export interface ModelInfo {
         activation?: string;
         pos_embd?: string;
     };
+    layer_schema?: SchemaNode[];
 }
