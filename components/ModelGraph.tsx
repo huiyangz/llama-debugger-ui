@@ -18,6 +18,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { ModelInfo, LayerInfo, SchemaNode } from '@/types/model';
+import { useTranslations } from 'next-intl';
 
 interface ModelGraphProps {
     modelInfo: ModelInfo;
@@ -155,10 +156,15 @@ function ViewportUpdater({ currentLayer, currentNode, nodes }: { currentLayer?: 
 }
 
 function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, currentInputs, onLayerClick }: ModelGraphProps) {
+    const t = useTranslations('ModelGraph');
+    const tCommon = useTranslations('Common');
+
     const [isLocked, setIsLocked] = React.useState(true);
 
     // Track visit counts for each node
     const [nodeVisitCounts, setNodeVisitCounts] = React.useState<Map<string, number>>(new Map());
+
+
 
     // Update visit count when currentNode changes
     React.useEffect(() => {
@@ -495,10 +501,10 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
 
         // Entry/Exit Hubs
         layerNodes.push({
-            id: `${prefix}_entry`, parentNode: prefix, type: 'hub', position: { x: layerWidth / 2 - 40, y: 40 }, data: { label: 'Layer Entry' }
+            id: `${prefix}_entry`, parentNode: prefix, type: 'hub', position: { x: layerWidth / 2 - 40, y: 40 }, data: { label: t('layerEntry') }
         });
         layerNodes.push({
-            id: `${prefix}_exit`, parentNode: prefix, type: 'hub', position: { x: layerWidth / 2 - 40, y: exitY }, data: { label: 'Layer Exit' }
+            id: `${prefix}_exit`, parentNode: prefix, type: 'hub', position: { x: layerWidth / 2 - 40, y: exitY }, data: { label: t('layerExit') }
         });
 
         return { nodes: layerNodes, height: exitY + 100, nameToAbstract, firstAbstractNodes, lastAbstractNodes };
@@ -517,7 +523,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
             id: 'input',
             type: 'component',
             position: { x: BASE_X - 55, y: yOffset },
-            data: { label: 'Input Tokens', componentType: 'input', isCurrent: false, onClick: () => { } },
+            data: { label: t('inputTokens'), componentType: 'input', isCurrent: false, onClick: () => { } },
         });
         yOffset += V_SPACING + 20;
 
@@ -527,7 +533,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
             type: 'component',
             position: { x: BASE_X - 55, y: yOffset },
             data: {
-                label: 'Token Embedding',
+                label: t('tokenEmbedding'),
                 sublabel: getGlobalTensorLabel('tok_embd', `[seq, ${modelInfo.n_embd}]`),
                 componentType: 'embedding',
                 isCurrent: false,
@@ -547,7 +553,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
                 id: prefix,
                 type: 'group',
                 position: { x: BASE_X - 700, y: yOffset },
-                data: { label: `[ LAYER ${displayLayerIdx + 1} / ${modelInfo.n_layers} ]` },
+                data: { label: t('layerTitle', { index: displayLayerIdx + 1, total: modelInfo.n_layers }) },
                 style: style_group(true, height),
             });
 
@@ -557,7 +563,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
                 parentNode: prefix,
                 type: 'default',
                 position: { x: 20, y: 15 },
-                data: { label: `[ LAYER ${displayLayerIdx + 1} / ${modelInfo.n_layers} ]` },
+                data: { label: t('layerTitle', { index: displayLayerIdx + 1, total: modelInfo.n_layers }) },
                 style: {
                     width: 200,
                     fontSize: '14px',
@@ -580,7 +586,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
                 id: prefix,
                 type: 'group',
                 position: { x: BASE_X - 500, y: yOffset },
-                data: { label: `[ LAYER ${displayLayerIdx + 1} / ${modelInfo.n_layers} ]` },
+                data: { label: t('layerTitle', { index: displayLayerIdx + 1, total: modelInfo.n_layers }) },
                 style: style_group(true, 900),
             });
             yOffset += 900 + 50;
@@ -592,7 +598,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
             type: 'component',
             position: { x: BASE_X - 55, y: yOffset },
             data: {
-                label: 'Final Norm',
+                label: t('finalNorm'),
                 sublabel: getGlobalTensorLabel('output_norm', `[seq, ${modelInfo.n_embd}]`),
                 componentType: 'norm',
                 isCurrent: false,
@@ -607,7 +613,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
             type: 'component',
             position: { x: BASE_X - 55, y: yOffset },
             data: {
-                label: 'Output Proj (LM Head)',
+                label: t('outputProj'),
                 sublabel: getGlobalTensorLabel('output', `[seq, ${modelInfo.n_vocab}]`),
                 componentType: 'output',
                 isCurrent: false,
@@ -616,7 +622,8 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
         });
 
         return result;
-    }, [modelInfo.layers, currentLayer, currentNode, currentOp, layerSpecificSchema, modelInfo.n_layers, modelInfo.n_embd, modelInfo.n_vocab]);
+        return result;
+    }, [modelInfo.layers, currentLayer, currentNode, currentOp, layerSpecificSchema, modelInfo.n_layers, modelInfo.n_embd, modelInfo.n_vocab, t]);
 
     // Track abstract mapping for edges
     const abstractData = useMemo(() => {
@@ -741,7 +748,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
                     id: `${prefix}_loop_simplified`,
                     source: `${prefix}_exit`, sourceHandle: 'right-out',
                     target: `${prefix}_entry`, targetHandle: 'right-in',
-                    label: 'Iterate', labelStyle: { fill: '#fbbf24', fontWeight: 700, fontSize: 10 },
+                    label: t('iterate'), labelStyle: { fill: '#fbbf24', fontWeight: 700, fontSize: 10 },
                     animated: true, type: 'smoothstep',
                     style: { stroke: '#fbbf24', strokeWidth: 2, strokeDasharray: '10,5' },
                     markerEnd: arrow(true),
@@ -750,7 +757,8 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
         }
 
         return result;
-    }, [modelInfo.layers, currentLayer, currentNode, layerSpecificSchema, modelInfo.n_layers]);
+        return result;
+    }, [modelInfo.layers, currentLayer, currentNode, layerSpecificSchema, modelInfo.n_layers, t]);
 
     const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
     const [edgesState, setEdgesState, onEdgesChange] = useEdgesState(edges);

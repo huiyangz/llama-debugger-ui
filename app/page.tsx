@@ -7,8 +7,10 @@ import { DetailPanel } from '@/components/DetailPanel';
 import { useDebug } from '@/hooks/useDebug';
 import { useModelInfo } from '@/hooks/useModelInfo';
 import { LayerInfo } from '@/types/model';
+import { useTranslations } from 'next-intl';
 
 export default function Home() {
+    const t = useTranslations('Home');
     const { state, tokens, loading, streamLoading, error, controls } = useDebug();
     const { modelInfo, loading: modelLoading } = useModelInfo();
     const [selectedLayer, setSelectedLayer] = useState<LayerInfo | null>(null);
@@ -18,6 +20,8 @@ export default function Home() {
     };
 
     const handleTestStream = async (prompt: string) => {
+        // Always enforce debug mode and token granularity reset before starting
+        await controls.enable();
         await controls.testStream(prompt);
     };
 
@@ -25,8 +29,8 @@ export default function Home() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <div className="text-xl font-semibold mb-2">加载模型信息中...</div>
-                    <div className="text-gray-500">请稍候</div>
+                    <div className="text-xl font-semibold mb-2">{t('loadingModel')}</div>
+                    <div className="text-gray-500">{t('pleaseWait')}</div>
                 </div>
             </div>
         );
@@ -36,8 +40,8 @@ export default function Home() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <div className="text-xl font-semibold mb-2 text-red-600">无法加载模型信息</div>
-                    <div className="text-gray-500">请检查后端服务是否运行</div>
+                    <div className="text-xl font-semibold mb-2 text-red-600">{t('loadFailed')}</div>
+                    <div className="text-gray-500">{t('checkBackend')}</div>
                 </div>
             </div>
         );

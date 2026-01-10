@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { DebugState, TokenInfo, DebugResponse } from '@/types/debug';
 
 const API_BASE = 'http://localhost:8080';
@@ -14,10 +14,11 @@ export function useDebug() {
 
   const [tokens, setTokens] = useState<TokenInfo[]>([]);
   const tokensRef = useRef<TokenInfo[]>([]); // 使用 ref 来追踪实际列表
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [streamLoading, setStreamLoading] = useState(false); // 单独的流式加载状态
   const [error, setError] = useState<string | null>(null);
   const [tokenVersion, setTokenVersion] = useState(0); // 版本号，用于强制刷新
+
 
   const controls = {
     pause: useCallback(async () => {
@@ -134,8 +135,27 @@ export function useDebug() {
       }
     }, []),
 
-    getState: useCallback(async () => {
+    disable: useCallback(async () => {
       setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE}/api/debug/control`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'disable' })
+        });
+        const data: DebugResponse = await res.json();
+        if (data.error) throw new Error(data.error);
+        await controls.getState();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Disable failed');
+      } finally {
+        setLoading(false);
+      }
+    }, []),
+
+    getState: useCallback(async (silent = false) => {
+      if (!silent) setLoading(true);
       setError(null);
       try {
         const res = await fetch(`${API_BASE}/api/debug/state`);
@@ -163,7 +183,7 @@ export function useDebug() {
         setError(e instanceof Error ? e.message : 'Get state failed');
         return null;
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     }, []),
 
@@ -281,9 +301,32 @@ export function useDebug() {
         setError(errorMsg);
       } finally {
         setStreamLoading(false);
+        // Ensure debug mode is disabled after stream finishes to allow new sessions
+        // We call it here to guarantee reset, but we might want to wait for the resume to finish?
+        // The resume logic is inside the loop.
+        // Let's force disable here.
+        await controls.disable();
       }
     }, [state.paused]), // 添加 state.paused 作为依赖
   };
+
+  // Sync state on mount
+  useEffect(() => {
+    controls.getState();
+  }, []); // Run once on mount
+
+  // Poll for state when running but not paused
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (state.enabled && !state.paused) {
+      interval = setInterval(() => {
+        controls.getState(true); // Silent update
+      }, 500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [state.enabled, state.paused]);
 
   return { state, tokens, loading, streamLoading, error, controls };
 }

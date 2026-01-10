@@ -18,6 +18,9 @@ interface ToolbarProps {
     onTestStream: (prompt: string) => void;
 }
 
+import { useTranslations } from 'next-intl';
+import LanguageSwitcher from './LanguageSwitcher';
+
 export function Toolbar({
     state,
     tokenCount,
@@ -33,6 +36,9 @@ export function Toolbar({
     onClearTokens,
     onTestStream,
 }: ToolbarProps) {
+    const t = useTranslations('Toolbar');
+    const tCommon = useTranslations('Common');
+
     const handleTestClick = () => {
         const input = document.getElementById('prompt-input') as HTMLInputElement;
         if (input && input.value) {
@@ -41,104 +47,83 @@ export function Toolbar({
     };
 
     return (
-        <div className="border-b bg-white dark:bg-gray-800 shadow-sm">
+        <div className="border-b bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm sticky top-0 z-10 border-gray-200 dark:border-gray-800">
             <div className="px-4 py-3">
                 {/* Top row: Status and controls */}
                 <div className="flex items-center justify-between mb-3">
                     {/* Status indicators */}
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">状态:</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{tCommon('status')}:</span>
                             <span className="text-sm font-semibold">
-                                {state.paused ? '⏸ 已暂停' : '▶ 运行中'}
+                                {state.paused ? `⏸ ${tCommon('paused')}` : `▶ ${tCommon('running')}`}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">位置:</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Position:</span>
                             <span className="text-sm font-semibold truncate max-w-[200px]" title={state.currentNode}>
                                 {state.currentLayer !== undefined && state.currentLayer !== -1 ? `L${state.currentLayer + 1}` : '-'}
                                 {state.currentNode ? ` ${state.currentNode}` : ''}
                             </span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">Token:</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{tCommon('token')}:</span>
                             <span className="text-sm font-semibold">{tokenCount}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">后端:</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">Backend:</span>
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-sm font-semibold text-green-600">已连接</span>
+                                <span className="text-sm font-semibold text-green-600">Connected</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Control buttons */}
                     <div className="flex gap-2">
-                        <button
-                            onClick={onEnable}
-                            disabled={state.enabled || loading}
-                            className="px-3 py-1.5 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="启用调试"
-                        >
-                            🔧 启用
-                        </button>
-                        <button
-                            onClick={onPause}
-                            disabled={!state.enabled || state.paused || loading}
-                            className="px-3 py-1.5 text-sm bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="暂停"
-                        >
-                            ⏸ 暂停
-                        </button>
+                        {/* Enable and Pause buttons removed as per user request */}
                         <button
                             onClick={onResume}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-2.5 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
-                            title="继续运行直到下一个断点或结束"
+                            className="px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1 transition-all shadow-sm"
+                            title={t('resume')}
                         >
-                            🚀 继续
+                            🚀 {t('resume')}
                         </button>
                         <button
                             onClick={onNextLayer}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-2.5 py-1.5 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
-                            title="执行到下一层"
+                            className="px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1 transition-all shadow-sm"
+                            title={t('nextLayer')}
                         >
-                            🥞 逐层
+                            🥞 {t('nextLayer')}
                         </button>
                         <button
                             onClick={onNextToken}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-2.5 py-1.5 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
-                            title="执行下一个 Token"
+                            className="px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1 transition-all shadow-sm"
+                            title={t('nextToken')}
                         >
-                            🔤 逐 Token
+                            🔤 {t('nextToken')}
                         </button>
                         <button
                             onClick={onStep}
                             disabled={!state.enabled || !state.paused || loading}
-                            className="px-2.5 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1"
-                            title="执行下一个算子"
+                            className="px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-1 transition-all shadow-sm"
+                            title={t('step')}
                         >
-                            ⤵ 单步
+                            ⤵ {t('step')}
                         </button>
                         <button
                             onClick={onRefresh}
                             disabled={loading}
-                            className="px-2.5 py-1.5 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="刷新状态"
+                            className="px-2.5 py-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                            title={t('refresh')}
                         >
                             🔄
                         </button>
-                        <button
-                            onClick={onClearTokens}
-                            disabled={tokenCount === 0}
-                            className="px-2.5 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                            title="清空 Tokens"
-                        >
-                            🗑
-                        </button>
+                        <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 self-center mx-1" />
+                        <LanguageSwitcher />
                     </div>
                 </div>
 
@@ -149,14 +134,14 @@ export function Toolbar({
                         type="text"
                         defaultValue="The capital of France is"
                         className="flex-1 px-3 py-1.5 text-sm border rounded dark:bg-gray-700 dark:border-gray-600"
-                        placeholder="输入提示词..."
+                        placeholder={t('inputPrompt')}
                     />
                     <button
                         onClick={handleTestClick}
-                        disabled={!state.enabled || loading}
-                        className="px-4 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 font-medium"
+                        disabled={loading || streamLoading || state.paused}
+                        className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-medium disabled:cursor-not-allowed"
                     >
-                        {streamLoading ? '⏳ 生成中...' : '🚀 测试推理'}
+                        {(streamLoading || state.paused) ? `⏳ ${t('testing')}` : `🚀 ${t('testStream')}`}
                     </button>
                 </div>
             </div>

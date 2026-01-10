@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# llama-debugger-ui
 
-## Getting Started
+[English](README.md) | [中文](docs/README_zh.md)
 
-First, run the development server:
+
+`llama-debugger-ui` is a powerful visual debugging frontend for `llama.cpp`. It provides real-time visualization of the Transformer model's internal state, allowing developers and researchers to inspect tensors, activations, and data flow layer-by-layer and token-by-token.
+
+## Features
+
+- **Interactive Graph View**: Visualizes the computational graph of the model, including attention heads, FFNs, and normalization layers.
+- **Real-time Inspection**: Inspect tensor values, shapes, and types at any point in the computation.
+- **Step-by-Step Debugging**: Control the inference process with granular steps:
+  - **Token**: Run one token at a time.
+  - **Layer**: Advance through the model one layer at a time.
+  - **Operation**: Execute single operations (e.g., matrix multiplication, activation) for low-level debugging.
+- **KV Cache Visualization**: Monitor the state of the Key-Value cache associated with each attention block.
+
+## Prerequisites
+
+To use this debugging UI, you **MUST** run the backend using a specifically modified version of `llama.cpp` that exposes the necessary debug hooks and API endpoints.
+
+*   **Node.js**: v18 or later
+*   **Modified llama.cpp**:
+    *   **Repository**: [https://github.com/huiyangz/llama.cpp](https://github.com/huiyangz/llama.cpp)
+    *   **Branch**: `feature/debugger`
+
+## Quick Start
+
+### 1. Set up the Backend (llama.cpp)
+
+First, clone and build the modified `llama.cpp` backend:
+
+```bash
+git clone -b feature/debugger https://github.com/huiyangz/llama.cpp
+cd llama.cpp
+mkdir build && cd build
+cmake .. -DLLAMA_DEBUGGER=ON  # Enable debugger support
+make -j
+```
+
+Start the server using the compiled binary (ensure you have a model file formatted for GGUF):
+
+```bash
+# Example command
+./bin/llama-server -m /path/to/your/model.gguf -c 2048 --host 0.0.0.0 --port 8080
+```
+
+### 2. Set up the Frontend (llama-debugger-ui)
+
+Clone this repository and install dependencies:
+
+```bash
+git clone https://github.com/huiyangz/llama-debugger-ui.git
+cd llama-debugger-ui
+npm install
+# or
+yarn install
+```
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser. The UI should automatically connect to the `llama.cpp` server running on `localhost:8080`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Configuration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+If your `llama.cpp` server is running on a different host or port, you can configure the backend URL in `llama-debugger-ui`. (Currently defaults to `http://localhost:8080`, configuration via `.env` coming soon).
 
-## Learn More
+## Roadmap
 
-To learn more about Next.js, take a look at the following resources:
+- **Enhanced Graph Visualization**: Optimize the rendering of computational graphs to decouple fused operators, ensuring a precise and intuitive visual representation during single-step debugging.
+- **Deep Data Inspection**: Enable detailed inspection of inputs and outputs for every operator, including the ability to download complete tensor data for offline analysis.
+- **KV Cache Monitoring**: Visualize KV cache memory usage and occupancy stats when the debugger is paused.
+- **Dynamic Flow Control**: Allow runtime modification of intermediate tensor values (inputs/outputs) to test hypotheses and intervene in the inference process.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
