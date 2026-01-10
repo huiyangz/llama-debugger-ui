@@ -336,7 +336,7 @@ function ModelGraphInner({ modelInfo, currentLayer, currentNode, currentOp, curr
             console.log('Sample virtual nodes:', Array.from(virtualNodes).slice(0, 10));
 
             // Check for problematic inputs
-            const emptyInputs = [];
+            const emptyInputs: string[] = [];
             activeNodes.forEach(node => {
                 node.inputs.forEach(inp => {
                     const cleaned = inp.replace(/\s*\([^)]*\)/g, '').trim();
